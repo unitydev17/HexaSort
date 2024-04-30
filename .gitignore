@@ -1,0 +1,13 @@
+.vscode
+Logs
+UserSettings
+.vsconfig
+Assembly-CSharp-Editor.csproj
+Assembly-CSharp-firstpass.csproj
+Assembly-CSharp.csproj
+HexaSort-main.sln
+HexaSort.sln
+Unity.PlayerPrefsEditor.Editor.csproj
+Unity.PlayerPrefsEditor.EditorResources.csproj
+Unity.PlayerPrefsEditor.Samples.SampleScene.csproj
+Unity.PlayerPrefsEditor.Samples.TestValueMenu.Editor.csproj
