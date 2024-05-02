@@ -12,10 +12,12 @@ public class CanvasManager : MonoSingleton<CanvasManager>
         MainMenu, Game, Success, Fail
     }
     [Header("References")]
-    [SerializeField] TextMeshProUGUI scoreText;
+    [SerializeField]
+    private TextMeshProUGUI scoreText;
 
     [Header("Debug")]
-    [SerializeField] int currentScore;
+    [SerializeField]
+    private int currentScore;
 
 
     [Header("Canvas Groups")]
@@ -27,7 +29,7 @@ public class CanvasManager : MonoSingleton<CanvasManager>
     [Header("Standard Objects")]
     public Image screenFader;
     public TextMeshProUGUI levelText;
-    CanvasGroup[] canvasArray;
+    private CanvasGroup[] canvasArray;
 
 
     protected override void Awake()
@@ -41,7 +43,7 @@ public class CanvasManager : MonoSingleton<CanvasManager>
         canvasArray[(int)PanelType.Success] = successCanvasGroup;
         canvasArray[(int)PanelType.Fail] = failCanvasGroup;
 
-        foreach (CanvasGroup canvas in canvasArray)
+        foreach (var canvas in canvasArray)
         {
             canvas.gameObject.SetActive(true);
             canvas.alpha = 0;
@@ -54,7 +56,7 @@ public class CanvasManager : MonoSingleton<CanvasManager>
         // HACK: Workaround for FBSDK
         // FBSDK spawns a persistent EventSystem object. Since Unity 2020.2 there must be only one EventSystem objects at a given time.
         // So we must dispose our own EventSystem object if it exists.
-        UnityEngine.EventSystems.EventSystem[] eventSystems = FindObjectsOfType<UnityEngine.EventSystems.EventSystem>();
+        var eventSystems = FindObjectsOfType<UnityEngine.EventSystems.EventSystem>();
         if (eventSystems.Length > 1)
         {
             Destroy(GetComponentInChildren<UnityEngine.EventSystems.EventSystem>().gameObject);
@@ -62,7 +64,7 @@ public class CanvasManager : MonoSingleton<CanvasManager>
         }
     }
 
-    void Start()
+    private void Start()
     {
         levelText.text = "LEVEL " + GameManager.instance.GetTotalStagePlayed().ToString();
 
@@ -80,9 +82,9 @@ public class CanvasManager : MonoSingleton<CanvasManager>
     }
     public void ShowPanel(PanelType panelId)
     {
-        int panelIndex = (int)panelId;
+        var panelIndex = (int)panelId;
 
-        for (int i = 0; i < canvasArray.Length; i++)
+        for (var i = 0; i < canvasArray.Length; i++)
         {
             if (i == panelIndex)
             {

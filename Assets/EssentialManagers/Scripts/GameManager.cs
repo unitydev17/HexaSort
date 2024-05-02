@@ -18,7 +18,7 @@ public class GameManager : MonoSingleton<GameManager>
 
     public int BlastObjectiveAmount;
     public int MaxTargetScore;
-    GridManager _gridManager => GridManager.instance;
+    private GridManager _gridManager => GridManager.instance;
     private void Start()
     {
         CanvasManager.instance.ScoreUpdatedEvent += OnScoreUpdated;
@@ -108,10 +108,10 @@ public class GameManager : MonoSingleton<GameManager>
 
     public void CheckFailStatus()
     {
-        int occupiedCellAmount = 0;
-        for (int i = 0; i < _gridManager.transform.childCount; i++)
+        var occupiedCellAmount = 0;
+        for (var i = 0; i < _gridManager.transform.childCount; i++)
         {
-            CellController cell = _gridManager.transform.GetChild(i).GetComponent<CellController>();
+            var cell = _gridManager.transform.GetChild(i).GetComponent<CellController>();
 
             if (cell.isOccupied && !cell.IsAction)
                 occupiedCellAmount++;

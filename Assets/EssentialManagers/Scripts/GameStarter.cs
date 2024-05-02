@@ -5,7 +5,7 @@ using UnityEngine.EventSystems;
 
 public class GameStarter : MonoBehaviour, IPointerDownHandler
 {
-    bool ready = false;
+    private bool ready = false;
 
     private void Start()
     {

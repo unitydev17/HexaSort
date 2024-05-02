@@ -17,7 +17,7 @@ public class CameraManager : MonoSingleton<CameraManager>
     public CinemachineVirtualCamera failCam;
     public ParticleSystem confetti;
 
-    CinemachineVirtualCamera[] vcamArr;
+    private CinemachineVirtualCamera[] vcamArr;
 
     protected override void Awake()
     {
@@ -44,7 +44,7 @@ public class CameraManager : MonoSingleton<CameraManager>
 
     public void SetCam(CamType camType)
     {
-        for (int i = 0; i < vcamArr.Length; i++)
+        for (var i = 0; i < vcamArr.Length; i++)
         {
             if (i == (int)camType)
             {

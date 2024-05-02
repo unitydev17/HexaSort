@@ -6,19 +6,23 @@ using Random = UnityEngine.Random;
 public class StackSpawner : MonoSingleton<StackSpawner>
 {
     [Header("References")]
-    [SerializeField] PickableStack stackPrefab;
-    [SerializeField] HexagonController hexagonPrefab;
+    [SerializeField]
+    private PickableStack stackPrefab;
+    [SerializeField] private HexagonController hexagonPrefab;
 
     [Header("References")]
-    [SerializeField] List<int> scoreTresholds;
+    [SerializeField]
+    private List<int> scoreTresholds;
 
     [Header("Debug")]
-    [SerializeField] int maxColorVarierty;
-    [SerializeField] int tresholdIndex;
+    [SerializeField]
+    private int maxColorVarierty;
+    [SerializeField] private int tresholdIndex;
     [Tooltip("Only for demonstration, do not modify this region")]
-    [SerializeField] Transform[] spawnPoints;
-    [SerializeField] List<Transform> stacks;
-    const int _count = 3;
+    [SerializeField]
+    private Transform[] spawnPoints;
+    [SerializeField] private List<Transform> stacks;
+    private const int _count = 3;
 
     protected override void Awake()
     {
@@ -59,37 +63,39 @@ public class StackSpawner : MonoSingleton<StackSpawner>
         if (CheckCanSpawn()) SpawnStacks();
     }
 
-    bool CheckCanSpawn()
+    private bool CheckCanSpawn()
     {
         return stacks.Count == 0;
     }
-    void SpawnStacks()
+
+    private void SpawnStacks()
     {
-        for (int i = 0; i < _count; i++)
+        for (var i = 0; i < _count; i++)
         {
-            int spawnPosIndex = i + 1; // Because when use this extension "GetComponentsInChildren" it adds this transform itself to the array too
-            PickableStack cloneStack = Instantiate(stackPrefab, spawnPoints[spawnPosIndex].position, Quaternion.identity);
+            var spawnPosIndex = i + 1; // Because when use this extension "GetComponentsInChildren" it adds this transform itself to the array too
+            var cloneStack = Instantiate(stackPrefab, spawnPoints[spawnPosIndex].position, Quaternion.identity);
             stacks.Add(cloneStack.transform);
         }
 
         SpawnHex();
     }
-    void SpawnHex()
-    {
-        for (int s = 0; s < stacks.Count; s++)
-        {
-            int randomHexCount = GetRandomAmount(1, 5);
 
-            for (int i = 0; i < randomHexCount; i++)
+    private void SpawnHex()
+    {
+        for (var s = 0; s < stacks.Count; s++)
+        {
+            var randomHexCount = GetRandomAmount(1, 5);
+
+            for (var i = 0; i < randomHexCount; i++)
             {
-                ColorInfo.ColorEnum color = GetRandomColor();
-                Material mat = new Material(GridManager.instance.BlockMaterial);
+                var color = GetRandomColor();
+                var mat = new Material(GridManager.instance.BlockMaterial);
                 mat.color = GridManager.instance.colorPack.HexagonColorInfo[GridManager.instance.colorPack.GetColorEnumIndex(color)].HexColor;
 
-                HexagonController hex = Instantiate(hexagonPrefab, Vector3.zero, Quaternion.identity, stacks[s]);
+                var hex = Instantiate(hexagonPrefab, Vector3.zero, Quaternion.identity, stacks[s]);
 
-                float verticalPos = i * GridManager.instance.VERTICAL_PLACEMENT_OFFSET;
-                Vector3 spawnPos = new Vector3(0, verticalPos, 0);
+                var verticalPos = i * GridManager.instance.VERTICAL_PLACEMENT_OFFSET;
+                var spawnPos = new Vector3(0, verticalPos, 0);
                 hex.transform.localPosition = spawnPos;
                 hex.Initialize(color, mat);
             }
@@ -98,14 +104,15 @@ public class StackSpawner : MonoSingleton<StackSpawner>
 
     #region GETTERS
 
-    ColorInfo.ColorEnum GetRandomColor()
+    private ColorInfo.ColorEnum GetRandomColor()
     {
 
-        int randomIndex = Random.Range(1, maxColorVarierty + 1);
+        var randomIndex = Random.Range(1, maxColorVarierty + 1);
 
         return (ColorInfo.ColorEnum)randomIndex;
     }
-    int GetRandomAmount(int min, int max)
+
+    private int GetRandomAmount(int min, int max)
     {
         return Random.Range(min, max);
     }

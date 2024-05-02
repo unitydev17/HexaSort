@@ -14,7 +14,7 @@ public class ColorPack : ScriptableObject
     public List<ColorPackInfo> HexagonColorInfo = new List<ColorPackInfo>();
     public int GetColorEnumIndex(ColorInfo.ColorEnum ControlColorEnum)
     {
-        for (int i = 0; i < HexagonColorInfo.Count; i++)
+        for (var i = 0; i < HexagonColorInfo.Count; i++)
         {
             if (ControlColorEnum == HexagonColorInfo[i].SelectedColorEnum)
             {

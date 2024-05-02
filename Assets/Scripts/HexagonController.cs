@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class HexagonController : MonoBehaviour
 {
-    [SerializeField] ColorInfo.ColorEnum color;
+    [SerializeField] private ColorInfo.ColorEnum color;
   
     public void Initialize(ColorInfo.ColorEnum colorEnum, Material material)
     {

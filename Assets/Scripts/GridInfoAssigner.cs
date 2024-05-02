@@ -8,7 +8,8 @@ public class GridInfoAssigner : MonoBehaviour
 {
     public List<StartInfo> startInfos = new();
     public string levelKey;
-    IEnumerator Start()
+
+    private IEnumerator Start()
     {
         yield return null;
         gameObject.SetActive(false);
@@ -16,7 +17,7 @@ public class GridInfoAssigner : MonoBehaviour
 
     public void AddToStartInfo(CellController selectedCell)
     {
-        Vector2Int coordinates = new Vector2Int((int)selectedCell.GetCoordinates().x, (int)selectedCell.GetCoordinates().y);
+        var coordinates = new Vector2Int((int)selectedCell.GetCoordinates().x, (int)selectedCell.GetCoordinates().y);
         if (startInfos.Any(info => info.Coordinates == coordinates)) return;
 
         if (startInfos == null) startInfos = new();
@@ -31,9 +32,9 @@ public class GridInfoAssigner : MonoBehaviour
         startInfos.Add(info);
 
         levelKey = "";
-        string glyphs = "aAbBcCdDeEfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxXyYzZ0123456789";
-        int charAmount = Random.Range(15, 20); //set those to the minimum and maximum length of your string
-        for (int i = 0; i < charAmount; i++)
+        var glyphs = "aAbBcCdDeEfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxXyYzZ0123456789";
+        var charAmount = Random.Range(15, 20); //set those to the minimum and maximum length of your string
+        for (var i = 0; i < charAmount; i++)
         {
             levelKey += glyphs[Random.Range(0, glyphs.Length)];
         }

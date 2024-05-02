@@ -6,10 +6,16 @@ public class InputManager : MonoSingleton<InputManager>
     public event System.Action TouchEndEvent;
     public event System.Action<PickableStack> StackPlacedOnGridEvent;
 
-    public LayerMask PickibleLayer;
+    public LayerMask PickableLayer;
     [SerializeField] private bool blockPicking;
 
     #region Essentials
+
+    protected override void Awake()
+    {
+        base.Awake();
+        _camera = Camera.main;
+    }
 
     public void OnPointerDown()
     {
@@ -27,23 +33,23 @@ public class InputManager : MonoSingleton<InputManager>
     private bool isDragging = false;
     private PickableStack selectedPickable;
     private Vector3 offset;
+    private Camera _camera;
 
-    void Start()
+    private void Start()
     {
         mainCamera = Camera.main;
     }
 
-    void Update()
+    private void Update()
     {
         if (!GameManager.instance.isLevelActive) return;
 
         // Check for mouse input
         if (Input.GetMouseButtonDown(0))
         {
-            RaycastHit hit;
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            var ray = _camera.ScreenPointToRay(Input.mousePosition);
 
-            if (Physics.Raycast(ray, out hit, 300, PickibleLayer))
+            if (Physics.Raycast(ray, out var hit, 300, PickableLayer))
             {
                 if (hit.collider.TryGetComponent(out PickableStack pickable))
                 {
@@ -62,18 +68,16 @@ public class InputManager : MonoSingleton<InputManager>
             if (selectedPickable != null)
             {
                 // Calculate the cell position and desired Y-axis offset
-                RaycastHit hit;
-                Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
-                if (Physics.Raycast(ray, out hit))
+                var ray = mainCamera.ScreenPointToRay(Input.mousePosition);
+                if (Physics.Raycast(ray, out var hit))
                 {
-                    Vector3 cellPosition = hit.point;
+                    var cellPosition = hit.point;
 
                     // Place the object on the grid with the calculated parameters
-                    PickableStack pickableStack = selectedPickable.GetComponent<PickableStack>();
+                    var pickableStack = selectedPickable.GetComponent<PickableStack>();
                     if (pickableStack != null)
                     {
                         pickableStack.GetPlaced(cellPosition);
-
                     }
                 }
 
@@ -85,9 +89,8 @@ public class InputManager : MonoSingleton<InputManager>
         // If dragging, move the selected object with the mouse
         if (isDragging && selectedPickable != null)
         {
-            RaycastHit hit;
-            Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
-            if (Physics.Raycast(ray, out hit))
+            var ray = mainCamera.ScreenPointToRay(Input.mousePosition);
+            if (Physics.Raycast(ray, out var hit))
             {
                 selectedPickable.transform.position = new Vector3(hit.point.x, .2f, hit.point.z);
             }

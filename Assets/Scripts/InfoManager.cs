@@ -7,7 +7,7 @@ public class InfoManager : MonoSingleton<InfoManager>
 
     public GridInfoAssigner GetCurrentInfo()
     {
-        int completedSceneCount = GameManager.instance.GetTotalStagePlayed() - 1;
+        var completedSceneCount = GameManager.instance.GetTotalStagePlayed() - 1;
 
         completedSceneCount = (completedSceneCount > currentGridInfo.Count - 1) ? currentGridInfo.Count - 1 : completedSceneCount;
 
