@@ -67,17 +67,23 @@ public class PickableStack : MonoBehaviour
     private void MarkCell()
     {
         var cellBelow = GetCellBelow();
-        if (cellBelow == null)
+        if (cellBelow is null)
         {
-            if (_prevCellBelow != null) _prevCellBelow.ToggleCellObject(out _);
+            if (_prevCellBelow is null) return;
+            _prevCellBelow.ToggleCellObject(out _);
             _prevCellBelow = null;
             return;
         }
 
         if (cellBelow == _prevCellBelow) return;
         cellBelow.ToggleCellObject(out _);
-        if (_prevCellBelow != null) _prevCellBelow.ToggleCellObject(out _);
-        _prevCellBelow = cellBelow;
+
+        if (_prevCellBelow is null) _prevCellBelow = cellBelow;
+        else
+        {
+            _prevCellBelow.ToggleCellObject(out _);
+            _prevCellBelow = cellBelow;
+        }
     }
 
     private void FollowMousePos()
