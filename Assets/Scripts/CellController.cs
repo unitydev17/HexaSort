@@ -309,11 +309,11 @@ public class CellController : MonoBehaviour
     }
     public void UpdateHexagonsList(List<HexagonController> hexes)
     {
-        for (var i = 0; i < hexes.Count; i++)
+        foreach (var hex in hexes)
         {
-            hexagons.Add(hexes[i]);
-            hexes[i].transform.SetParent(HexStackParent);
-            GridManager.instance.GridPlan[(int)_coordinates.x, (int)_coordinates.y].CellContentList.Add(hexes[i].GetColor());
+            hexagons.Add(hex);
+            hex.transform.SetParent(HexStackParent);
+            GridManager.instance.GridPlan[(int)_coordinates.x, (int)_coordinates.y].CellContentList.Add(hex.GetColor());
         }
     }
     public void ToggleCellObject(out bool _isOpen)

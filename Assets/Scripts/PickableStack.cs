@@ -53,8 +53,9 @@ public class PickableStack : MonoBehaviour
             else
             {
                 GetReleased();
-                _prevCellBelow = null;
             }
+
+            UnmarkCell();
         }
 
         if (!gameObject.activeInHierarchy) return;
@@ -62,6 +63,13 @@ public class PickableStack : MonoBehaviour
 
         FollowMousePos();
         MarkCell();
+    }
+
+    private void UnmarkCell()
+    {
+        if (_prevCellBelow is null) return;
+        _prevCellBelow.ToggleCellObject(out _);
+        _prevCellBelow = null;
     }
 
     private void MarkCell()
