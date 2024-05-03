@@ -1,17 +1,10 @@
-using System.Collections;
 using System.Collections.Generic;
-using System.Threading.Tasks;
+using System.Linq;
 using Solution;
 using UnityEngine;
 
 public class GridManager : MonoSingleton<GridManager>
 {
-    public enum TransferType
-    {
-        Send,
-        Take
-    };
-
     [Header("References")] [SerializeField]
     private GameObject CellPrefab;
 
@@ -31,6 +24,8 @@ public class GridManager : MonoSingleton<GridManager>
     public float VERTICAL_PLACEMENT_OFFSET = 0.2f;
     [SerializeField] private List<StartInfo> startInfos;
 
+    private readonly HashSet<Vector2Int> _distinctPath = new HashSet<Vector2Int>();
+
 
     [Space(125)] public GridInfoAssigner CurrentGridInfo;
 
@@ -38,15 +33,15 @@ public class GridManager : MonoSingleton<GridManager>
     {
         startInfos = new ();
 
-        for (var i = 0; i < InfoManager.instance.GetCurrentInfo().startInfos.Count; i++)
+        foreach (var info in InfoManager.instance.GetCurrentInfo().startInfos)
         {
-            startInfos.Add(InfoManager.instance.GetCurrentInfo().startInfos[i]);
+            startInfos.Add(info);
         }
 
         GenerateGrid();
     }
 
-    public void GenerateGrid()
+    private void GenerateGrid()
     {
         if (GridPlan != null)
         {
@@ -58,21 +53,15 @@ public class GridManager : MonoSingleton<GridManager>
         {
             for (var y = 0; y < _gridSizeY; y++)
             {
-                GridPlan[x, y] = new CellData();
+                GridPlan[x, y] = gameObject.AddComponent<CellData>();
 
-                int index;
                 GridPlan[x, y].PosX = x;
                 GridPlan[x, y].PosY = y;
 
-                if (ContainsInStartInfo(x, y, out index))
+                if (ContainsInStartInfo(x, y, out var index))
                 {
                     GridPlan[x, y].isOpen = startInfos[index].isOpen;
-                    var CE = new List<ColorInfo.ColorEnum>();
-                    for (var i = 0; i < startInfos[index].ContentInfo.Count; i++)
-                    {
-                        CE.Add(startInfos[index].ContentInfo[i]);
-                    }
-
+                    var CE = startInfos[index].ContentInfo.ToList();
                     GridPlan[x, y].CellContentList = CE;
                 }
                 else
@@ -86,13 +75,13 @@ public class GridManager : MonoSingleton<GridManager>
                     var cloneCellGO = Instantiate(CellPrefab, Vector3.zero, CellPrefab.transform.rotation, transform);
                     cloneCellGO.transform.position =
                         new Vector3(x * CELL_HORIZONTAL_OFFSET, 0,
-                            -(((x % 2) * (CELL_VERTICAL_OFFSET / 2)) + y * CELL_VERTICAL_OFFSET));
+                            -(x % 2 * (CELL_VERTICAL_OFFSET / 2) + y * CELL_VERTICAL_OFFSET));
 
                     GridPlan[x, y].CellObject = cloneCellGO;
+                    GridPlan[x, y].CellController = cloneCellGO.GetComponent<CellController>();
 
-                    cloneCellGO.name = x.ToString() + "," + y.ToString();
-                    var cellController = cloneCellGO.GetComponent<CellController>();
-                    cellController.SetCoordinates(x, y);
+                    cloneCellGO.name = x + "," + y;
+                    GridPlan[x, y].CellController.SetCoordinates(x, y);
                 }
 
                 if (GridPlan[x, y].CellContentList.Count != 0 && GridPlan[x, y].isOpen)
@@ -101,8 +90,10 @@ public class GridManager : MonoSingleton<GridManager>
                     for (var i = 0; i < GridPlan[x, y].CellContentList.Count; i++)
                     {
                         var color = GridPlan[x, y].CellContentList[i];
-                        var mat = new Material(BlockMaterial);
-                        mat.color = colorPack.HexagonColorInfo[colorPack.GetColorEnumIndex(color)].HexColor;
+                        var mat = new Material(BlockMaterial)
+                        {
+                            color = colorPack.HexagonColorInfo[colorPack.GetColorEnumIndex(color)].HexColor
+                        };
 
 
                         SpawnHexagon(i,
@@ -158,56 +149,6 @@ public class GridManager : MonoSingleton<GridManager>
         return false;
     }
 
-    // doto : duplicate logic
-    public List<Vector2> GetNeighboursCoordinates(Vector2 controlGridCoordinate)
-    {
-        var neighbourList = new List<Vector2>();
-
-        var isEvenRow = (int) controlGridCoordinate.x % 2 == 0;
-
-        var offsetsEvenRow = new Vector2[]
-        {
-            new Vector2(0, -1), // Top
-            new Vector2(+1, -1), // Top Right
-            new Vector2(+1, 0), // Bottom Right
-            new Vector2(0, +1), // Bottom
-            new Vector2(-1, 0), // Bottom Left
-            new Vector2(-1, -1) // Top Left
-        };
-
-        var offsetsOddRow = new Vector2[]
-        {
-            new Vector2(0, -1), // Top
-            new Vector2(+1, 0), // Top Right
-            new Vector2(+1, +1), // Bottom Right
-            new Vector2(0, +1), // Bottom
-            new Vector2(-1, +1), // Bottom Left
-            new Vector2(-1, 0) // Top Left
-        };
-
-        var offsets = isEvenRow ? offsetsEvenRow : offsetsOddRow;
-
-        foreach (var offset in offsets)
-        {
-            var neighbour = new Vector2(controlGridCoordinate.x + offset.x, controlGridCoordinate.y + offset.y);
-
-            if (IsCoordinateValidAndOpen(neighbour))
-            {
-                neighbourList.Add(neighbour);
-            }
-        }
-
-        bool IsCoordinateValidAndOpen(Vector2 coord)
-        {
-            var isValid = coord.x >= 0 && coord.x < GridPlan.GetLength(0) &&
-                          coord.y >= 0 && coord.y < GridPlan.GetLength(1);
-
-            return isValid && GridPlan[(int) coord.x, (int) coord.y].isOpen && !GridPlan[(int) coord.x, (int) coord.y].CellObject.GetComponent<CellController>().IsAction;
-        }
-
-        return neighbourList;
-    }
-
 
     [System.Serializable]
     public class StartInfo
@@ -219,16 +160,34 @@ public class GridManager : MonoSingleton<GridManager>
 
     public async void ManageTransfers()
     {
-        var cells = CellDataConverter.Convert(GridPlan);
-        var solver = new Solver(cells);
-        var path = solver.Solve();
-
-        foreach (var pair in path)
+        do
         {
-            var from = GridPlan[pair.from.x, pair.from.y].CellObject.GetComponent<CellController>();
-            var to = GridPlan[pair.to.x, pair.to.y].CellObject.GetComponent<CellController>();
+            var cells = CellDataConverter.Convert(GridPlan);
+            var solver = new Solver(cells);
+            var path = solver.Solve();
 
-            await from.Move(to, pair.count);
-        }
+            _distinctPath.Clear();
+
+            // move
+            foreach (var pair in path)
+            {
+                var from = GridPlan[pair.from.x, pair.from.y].CellController;
+                var to = GridPlan[pair.to.x, pair.to.y].CellController;
+
+                _distinctPath.Add(pair.from);
+                _distinctPath.Add(pair.to);
+
+                await from.Move(to, pair.count);
+            }
+
+            // check blasts
+            foreach (var cell in _distinctPath.Select(pos => GridPlan[pos.x, pos.y].CellController))
+            {
+                await cell.TryBlast();
+            }
+        } while (_distinctPath.Count > 0);
+
+        // validate fail state
+        GameManager.instance.CheckFailStatus();
     }
 }

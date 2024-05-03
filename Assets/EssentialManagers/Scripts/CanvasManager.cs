@@ -76,7 +76,7 @@ public class CanvasManager : MonoSingleton<CanvasManager>
     public void UpdateScoreText()
     {
         currentScore += 10; // just for demonstration no need to add specific currentScore system 
-        scoreText.text = "Score: " + currentScore.ToString();
+        scoreText.text = "Score: " + currentScore;
 
         ScoreUpdatedEvent?.Invoke(currentScore);
     }

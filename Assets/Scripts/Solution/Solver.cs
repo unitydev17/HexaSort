@@ -5,21 +5,13 @@ using UnityEngine;
 
 public class Solver
 {
-    // private readonly Vector2Int[] _neighboursPos =
-    // {
-    //     new Vector2Int(1, 0),
-    //     new Vector2Int(0, 1),
-    //     new Vector2Int(-1, 0),
-    //     new Vector2Int(0, -1),
-    // };
-
-
     private readonly Cell[,] _board;
     private readonly int _rows;
     private readonly int _columns;
 
-    private List<Path> _longestPath = new List<Path>();
+    private List<Path> _bestPath = new List<Path>();
     private int _pathCount;
+    private int _itemsTransferCount;
 
     public Solver(Cell[,] board)
     {
@@ -33,8 +25,8 @@ public class Solver
         var _positions = new List<Path>();
         FindPair(_board, _positions);
 
-        DampPositions(_longestPath);
-        return _longestPath;
+        // DampPositions(_bestPath);
+        return _bestPath;
     }
 
     private static Cell[,] CloneBoard(Cell[,] sampleBoard)
@@ -76,9 +68,18 @@ public class Solver
         }
 
 
-        if (positions.Count <= _pathCount) return;
-        _pathCount = positions.Count;
-        _longestPath = positions;
+        // Selection criteria:
+        // a) overall path steps to move
+        // if (positions.Count <= _pathCount) return;
+        // b) overall items to move
+
+        var itemCounts = positions.Sum(p => p.count);
+        if (itemCounts <= _itemsTransferCount) return;
+
+
+        // _pathCount = positions.Count;
+        _bestPath = positions;
+        _itemsTransferCount = itemCounts;
     }
 
 

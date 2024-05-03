@@ -8,4 +8,5 @@ public class CellData : MonoBehaviour
     public bool isOpen;
     public List<ColorInfo.ColorEnum> CellContentList = new();
     public GameObject CellObject;
+    public CellController CellController;
 }

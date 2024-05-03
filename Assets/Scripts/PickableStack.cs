@@ -117,8 +117,7 @@ public class PickableStack : MonoBehaviour
         InputManager.instance.SetBlockPicking(shouldBlock: false);
         InputManager.instance.TriggerStackPlacedOnGridEvent(this);
         targetCell.SetOccupied(true);
-        
-        // targetCell.StartCoroutine(targetCell.ControlTransfer(.4f));
+
         GridManager.instance.ManageTransfers();
 
         DestroySelf();
@@ -155,7 +154,7 @@ public class PickableStack : MonoBehaviour
         IsPicked = true;
     }
 
-    public void GetReleased()
+    private void GetReleased()
     {
         IsPicked = false;
         InputManager.instance.SetBlockPicking(false);

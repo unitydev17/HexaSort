@@ -7,7 +7,7 @@ namespace Solution
     {
         public static IEnumerator<Vector2Int> GetNeighbourPos(Vector2Int pos)
         {
-            var isEvenRow = (int) pos.x % 2 == 0;
+            var isEvenRow = pos.x % 2 == 0;
 
             var offsetsEvenRow = new[]
             {

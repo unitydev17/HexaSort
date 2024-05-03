@@ -4,7 +4,7 @@ public struct Path
 {
     public Vector2Int from;
     public Vector2Int to;
-    public int count;
+    public readonly int count;
 
     public Path(Vector2Int from, Vector2Int to, int count)
     {
