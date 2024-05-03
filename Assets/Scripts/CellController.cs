@@ -1,29 +1,66 @@
 using DG.Tweening;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 
 public class CellController : MonoBehaviour
 {
-    [Header("References")]
-    public Transform HexStackParent;
+    [Header("References")] public Transform HexStackParent;
     public GameObject opaqueMesh;
     public GameObject transparentMesh;
 
-    [Header("Debug")]
-    public bool IsAction;
+    [Header("Debug")] public bool IsAction;
     public bool isOccupied;
     public bool isOpen = true;
     [SerializeField] private Vector2 _coordinates = Vector2.zero;
 
-    [Header("Hexagons Related")]
-    [SerializeField]
+    [Header("Hexagons Related")] [SerializeField]
     private List<HexagonController> hexagons = new List<HexagonController>();
+
     public List<ColorInfo.ColorEnum> contentInfo;
+
     public void Starter()
     {
         SetHexagonLists();
     }
+
+    public async Task Move(CellController destination, int count)
+    {
+        var toCellPos = destination.GetCoordinates();
+        var toCell = GridManager.instance.GridPlan[(int) toCellPos.x, (int) toCellPos.y];
+
+        var fromCellPos = GetCoordinates();
+        var fromCell = GridManager.instance.GridPlan[(int) fromCellPos.x, (int) fromCellPos.y];
+
+        var itemsToSend = new List<HexagonController>();
+        for (var i = hexagons.Count - 1; i >= hexagons.Count - count; i--) itemsToSend.Add(hexagons[i]);
+
+        //Update Grid Classes
+        for (var i = 0; i < itemsToSend.Count; i++)
+        {
+            toCell.CellContentList.Add(fromCell.CellContentList[^1]);
+            fromCell.CellContentList.RemoveAt(fromCell.CellContentList.Count - 1);
+        }
+
+        //Move Hex Objects
+        var index = 0;
+        foreach (var item in itemsToSend)
+        {
+            item.transform.SetParent(destination.HexStackParent);
+            var delay = 0.1f * index++;
+            item.transform.DOLocalMove(new Vector3(0, destination.hexagons.Count * GridManager.instance.VERTICAL_PLACEMENT_OFFSET, 0), 0.3f).SetDelay(delay);
+
+            destination.hexagons.Add(item);
+            hexagons.RemoveAt(hexagons.Count - 1);
+        }
+
+        //If There Is No Hex In This Cell Set Occupation Status
+        SetOccupied(hexagons.Count > 0);
+        
+        await Task.Delay(300 + (count - 1) * 100);
+    }
+
     public IEnumerator ControlTransfer(float StartControlDelay)
     {
         //If There is Any Hex
@@ -55,7 +92,7 @@ public class CellController : MonoBehaviour
                 for (var i = 0; i < selectedHexList.Count; i++)
                 {
                     hexagons.RemoveAt(hexagons.Count - 1);
-                    var ThisGridClass = GridManager.instance.GridPlan[(int)GetCoordinates().x, (int)GetCoordinates().y];
+                    var ThisGridClass = GridManager.instance.GridPlan[(int) GetCoordinates().x, (int) GetCoordinates().y];
                     ThisGridClass.CellContentList.RemoveAt(ThisGridClass.CellContentList.Count - 1);
                 }
 
@@ -73,7 +110,7 @@ public class CellController : MonoBehaviour
             //If No Blast
             else
             {
-                var TopRopeColor = hexagons[hexagons.Count - 1].GetColor();
+                var TopRopeColor = hexagons[^1].GetColor();
                 var SendOrTake = GridManager.TransferType.Take;
                 var NeighboursCoordinateList = GridManager.instance.GetNeighboursCoordinates(GetCoordinates());
                 var SelectedNeighbours = new List<Vector2>();
@@ -82,8 +119,8 @@ public class CellController : MonoBehaviour
                 //Control All Finded Neighbours Cells
                 for (var i = 0; i < NeighboursCoordinateList.Count; i++)
                 {
-                    var NeighbourPosX = (int)NeighboursCoordinateList[i].x;
-                    var NeighbourPosY = (int)NeighboursCoordinateList[i].y;
+                    var NeighbourPosX = (int) NeighboursCoordinateList[i].x;
+                    var NeighbourPosY = (int) NeighboursCoordinateList[i].y;
                     var ControlNeighbourGrid = GridManager.instance.GridPlan[NeighbourPosX, NeighbourPosY];
                     var ControlNeighbourGridPart = GridManager.instance.GridPlan[NeighbourPosX, NeighbourPosY].CellObject.GetComponent<CellController>();
 
@@ -91,7 +128,7 @@ public class CellController : MonoBehaviour
                     if (ControlNeighbourGrid.isOpen && ControlNeighbourGrid.CellContentList.Count > 0)
                     {
                         //If Hexagon Colors Matched
-                        if (TopRopeColor == ControlNeighbourGridPart.hexagons[ControlNeighbourGridPart.hexagons.Count - 1].GetColor())
+                        if (TopRopeColor == ControlNeighbourGridPart.hexagons[^1].GetColor())
                         {
                             SelectedNeighbours.Add(new Vector2(NeighbourPosX, NeighbourPosY));
                         }
@@ -107,7 +144,7 @@ public class CellController : MonoBehaviour
                     //Check Selected Neighbours Pure Status
                     for (var i = 0; i < SelectedNeighbours.Count; i++)
                     {
-                        if (GridManager.instance.GridPlan[(int)SelectedNeighbours[i].x, (int)SelectedNeighbours[i].y].CellObject.GetComponent<CellController>().IsPure() && !IsPure())
+                        if (GridManager.instance.GridPlan[(int) SelectedNeighbours[i].x, (int) SelectedNeighbours[i].y].CellObject.GetComponent<CellController>().IsPure() && !IsPure())
                         {
                             SendOrTake = GridManager.TransferType.Send;
                             SelectedNeighbour = SelectedNeighbours[i];
@@ -141,9 +178,9 @@ public class CellController : MonoBehaviour
                         */
                     }
 
-                    var SelectedGridPart = GridManager.instance.GridPlan[(int)SelectedNeighbour.x, (int)SelectedNeighbour.y].CellObject.GetComponent<CellController>();
-                    var SelectedGridClass = GridManager.instance.GridPlan[(int)SelectedNeighbour.x, (int)SelectedNeighbour.y];
-                    var ThisGridClass = GridManager.instance.GridPlan[(int)GetCoordinates().x, (int)GetCoordinates().y];
+                    var SelectedGridPart = GridManager.instance.GridPlan[(int) SelectedNeighbour.x, (int) SelectedNeighbour.y].CellObject.GetComponent<CellController>();
+                    var SelectedGridClass = GridManager.instance.GridPlan[(int) SelectedNeighbour.x, (int) SelectedNeighbour.y];
+                    var ThisGridClass = GridManager.instance.GridPlan[(int) GetCoordinates().x, (int) GetCoordinates().y];
 
                     //Change Action Situations
                     IsAction = true;
@@ -247,8 +284,10 @@ public class CellController : MonoBehaviour
             isOccupied = false;
             GameManager.instance.CheckFailStatus();
         }
+
         GameManager.instance.CheckFailStatus();
     }
+
     public bool IsThereBlast()
     {
         var performBlast = false;
@@ -256,7 +295,6 @@ public class CellController : MonoBehaviour
         {
             if (hexagons.Count >= GameManager.instance.BlastObjectiveAmount)
                 performBlast = true;
-
         }
         //if (hexagons.Count > 1)
         //{
@@ -287,7 +325,7 @@ public class CellController : MonoBehaviour
 
     private bool IsPure()
     {
-        var TopRopeColor = hexagons[hexagons.Count - 1].GetColor();
+        var TopRopeColor = hexagons[^1].GetColor();
         for (var i = hexagons.Count - 1; i >= 0; i--)
         {
             if (hexagons[i].GetColor() != TopRopeColor)
@@ -298,6 +336,7 @@ public class CellController : MonoBehaviour
 
         return true;
     }
+
     public void BlastSelectedHexList(List<HexagonController> hexList)
     {
         for (var i = 0; i < hexList.Count; i++)
@@ -307,15 +346,17 @@ public class CellController : MonoBehaviour
 
         CanvasManager.instance.UpdateScoreText();
     }
+
     public void UpdateHexagonsList(List<HexagonController> hexes)
     {
         foreach (var hex in hexes)
         {
             hexagons.Add(hex);
             hex.transform.SetParent(HexStackParent);
-            GridManager.instance.GridPlan[(int)_coordinates.x, (int)_coordinates.y].CellContentList.Add(hex.GetColor());
+            GridManager.instance.GridPlan[(int) _coordinates.x, (int) _coordinates.y].CellContentList.Add(hex.GetColor());
         }
     }
+
     public void ToggleCellObject(out bool _isOpen)
     {
         var status = opaqueMesh.activeSelf;
@@ -325,22 +366,27 @@ public class CellController : MonoBehaviour
         isOpen = opaqueMesh.activeSelf;
         _isOpen = isOpen;
     }
+
     #region Getters / Setters
+
     public void AddHex(HexagonController hex)
     {
         if (!hexagons.Contains(hex))
             hexagons.Add(hex);
     }
+
     // GETTERS
     public Vector2 GetCoordinates()
     {
         return _coordinates;
     }
+
     public Vector3 GetCenter()
     {
         var centerPos = new Vector3(transform.position.x, transform.position.y + .2f, transform.position.z);
         return centerPos;
     }
+
     public Vector3 GetVerticalPosForHex()
     {
         var verticalOffset = (hexagons.Count - 1) * GridManager.instance.VERTICAL_PLACEMENT_OFFSET;
@@ -363,14 +409,17 @@ public class CellController : MonoBehaviour
             hexagons.Add(hexagonController);
         }
     }
+
     public void SetCoordinates(float x, float y)
     {
         _coordinates.x = x;
         _coordinates.y = y;
     }
+
     public void SetOccupied(bool state)
     {
         isOccupied = state;
     }
+
     #endregion
 }

@@ -1,161 +1,141 @@
 using System.Collections.Generic;
 using System.Linq;
+using Solution;
 using UnityEngine;
 
-public class Solver : MonoBehaviour
+public class Solver
 {
-    public class Cell
-    {
-        public List<int> items;
-        public bool Empty => items.Count == 0;
+    // private readonly Vector2Int[] _neighboursPos =
+    // {
+    //     new Vector2Int(1, 0),
+    //     new Vector2Int(0, 1),
+    //     new Vector2Int(-1, 0),
+    //     new Vector2Int(0, -1),
+    // };
 
-        public Cell(IEnumerable<int> items)
-        {
-            this.items = items.ToList();
-        }
+
+    private readonly Cell[,] _board;
+    private readonly int _rows;
+    private readonly int _columns;
+
+    private List<Path> _longestPath = new List<Path>();
+    private int _pathCount;
+
+    public Solver(Cell[,] board)
+    {
+        _board = board;
+        _columns = _board.GetLength(0);
+        _rows = _board.GetLength(1);
     }
 
-    private Cell[,] _board;
-
-    private Cell[,] CloneBoard(Cell[,] sampleBoard)
+    public IEnumerable<Path> Solve()
     {
-        var rows = sampleBoard.GetLength(0);
-        var columns = sampleBoard.GetLength(1);
+        var _positions = new List<Path>();
+        FindPair(_board, _positions);
 
-        var result = new Cell[rows, columns];
+        DampPositions(_longestPath);
+        return _longestPath;
+    }
 
-        for (var i = 0; i < rows; i++)
-        for (var j = 0; j < columns; j++)
-            result[i, j] = new Cell(sampleBoard[i, j].items);
+    private static Cell[,] CloneBoard(Cell[,] sampleBoard)
+    {
+        var columns = sampleBoard.GetLength(0);
+        var rows = sampleBoard.GetLength(1);
+
+        var result = new Cell[columns, rows];
+
+        for (var i = 0; i < columns; i++)
+        {
+            for (var j = 0; j < rows; j++)
+            {
+                result[i, j] = new Cell(sampleBoard[i, j].items);
+            }
+        }
 
         return result;
     }
 
-
-    private void Start()
+    private void FindPair(Cell[,] board, List<Path> positions)
     {
-        Init();
-        Solve();
-    }
-
-    private void Init()
-    {
-        _board = new[,]
+        for (var i = 0; i < _columns; i++)
         {
-            {new Cell(new[] {2, 1}), new Cell(new int [0])},
-            {new Cell(new[] {2, 1}), new Cell(new[] {1})}
-        };
-    }
-
-    private void Solve()
-    {
-        var _positions = new List<Vector4>();
-        FindPair(_positions);
-    }
-
-    private void FindPair(List<Vector4> positions)
-    {
-        var rows = _board.Length;
-        for (var i = 0; i < rows; i++)
-        {
-            var columns = _board.GetLength(i);
-            for (var j = 0; j < columns; j++)
+            for (var j = 0; j < _rows; j++)
             {
-                
-                
-                
-                
-                var indexNeighbourRight = j + 1;
-                if (indexNeighbourRight > columns - 1) Debug.Log("right neighbour DOESN'T EXIST");
-                if (_board[i, indexNeighbourRight].Empty) Debug.Log("right neighbour is EMPTY");
-                if (_board[i, j] == _board[i, indexNeighbourRight])
-                {
-                    Debug.Log("right neighbour is the SAME");
-                    // updated board 
-                    var newBoard = CloneBoard(_board);
-                    newBoard[i, indexNeighbourRight].items.Add(_board[i, j].items.Last());
-                    newBoard[i, j].items.RemoveAt(newBoard[i, j].items.Count - 1);
-                    // save pair
-                    var newPositions = new List<Vector4>(positions);
-                    newPositions.Add(new Vector4(i, j, i, indexNeighbourRight));
-                    FindPair(newPositions);
-                }
-                
-                
-                
-                
-                var indexNeighbourBottom = i + 1;
-                if (indexNeighbourBottom > rows - 1) Debug.Log("bottom neighbour DOESN'T EXIST");
-                if (_board[indexNeighbourBottom, j].Empty) Debug.Log("bottom neighbour is EMPTY");
-                if (_board[i, j] == _board[i, indexNeighbourBottom])
-                {
-                    Debug.Log("bottom neighbour is the SAME");
-                    // updated board 
-                    var newBoard = CloneBoard(_board);
-                    newBoard[indexNeighbourBottom, j].items.Add(_board[i, j].items.Last());
-                    newBoard[i, j].items.RemoveAt(newBoard[i, j].items.Count - 1);
-                    // save pair
-                    var newPositions = new List<Vector4>(positions);
-                    newPositions.Add(new Vector4(i, j, i, indexNeighbourBottom));
-                    FindPair(newPositions);
-                }
-                
-                
-                
-                
-                
+                if (board[i, j].items.Count == 0) continue;
 
-                var indexNeighbourLeft = j + 1;
-                if (indexNeighbourLeft < 0) Debug.Log("left neighbour DOESN'T EXIST");
-                if (_board[i, indexNeighbourLeft].Empty) Debug.Log("left neighbour is EMPTY");
-                if (_board[i, j] == _board[i, indexNeighbourLeft])
+                var pos = new Vector2Int(i, j);
+
+                // iterate against the hexagonal positions
+
+                var iterator = HexHelper.GetNeighbourPos(pos);
+                while (iterator.MoveNext())
                 {
-                    Debug.Log("left neighbour is the SAME");
-                    // updated board 
-                    var newBoard = CloneBoard(_board);
-                    newBoard[i, indexNeighbourLeft].items.Add(_board[i, j].items.Last());
-                    newBoard[i, j].items.RemoveAt(newBoard[i, j].items.Count - 1);
-                    // save pair
-                    var newPositions = new List<Vector4>(positions);
-                    newPositions.Add(new Vector4(i, j, i, indexNeighbourLeft));
-                    FindPair(newPositions);
-                }
-                
-                
-                
-                
-                
-                
-                var indexNeighbourTop = i - 1;
-                if (indexNeighbourTop < 0) Debug.Log("top neighbour DOESN'T EXIST");
-                if (_board[indexNeighbourTop, j].Empty) Debug.Log("top neighbour is EMPTY");
-                if (_board[i, j] == _board[i, indexNeighbourTop])
-                {
-                    Debug.Log("top neighbour is the SAME");
-                    // updated board 
-                    var newBoard = CloneBoard(_board);
-                    newBoard[indexNeighbourTop, j].items.Add(_board[i, j].items.Last());
-                    newBoard[i, j].items.RemoveAt(newBoard[i, j].items.Count - 1);
-                    // save pair
-                    var newPositions = new List<Vector4>(positions);
-                    newPositions.Add(new Vector4(i, j, i, indexNeighbourTop));
-                    FindPair(newPositions);
+                    if (CheckNear(board, pos, iterator.Current, positions)) break;
                 }
             }
         }
 
-        DampPositions(positions);
+
+        if (positions.Count <= _pathCount) return;
+        _pathCount = positions.Count;
+        _longestPath = positions;
     }
 
 
-    private void DampPositions(List<Vector4> pos)
+    private bool CheckNear(Cell[,] board, Vector2Int pos, Vector2Int nearPos, IEnumerable<Path> positions)
     {
-        Debug.Log("-----------DUMP--------");
-        foreach (var p in pos)
+        // check borders
+        if (nearPos.x > _columns - 1) return false;
+        if (nearPos.x < 0) return false;
+        if (nearPos.y > _rows - 1) return false;
+        if (nearPos.y < 0) return false;
+
+
+        var neighbourItems = board[nearPos.x, nearPos.y].items;
+        if (neighbourItems.Count == 0) return false;
+
+        var items = board[pos.x, pos.y].items;
+        if (items.Last() != neighbourItems.Last()) return false;
+
+        // create updated board 
+        var newBoard = CloneBoard(board);
+
+        // copy values 
+        var copyValue = items.Last();
+        var countValue = 0;
+
+        for (var k = items.Count - 1; k >= 0; k--)
         {
-            Debug.Log(pos);
+            if (items[k] != copyValue) break;
+            countValue++;
+            newBoard[nearPos.x, nearPos.y].items.Add(copyValue);
         }
 
-        Debug.Log($"count = {pos.Count}");
+        newBoard[pos.x, pos.y].items.RemoveRange(items.Count - countValue, countValue);
+
+
+        // save move position
+        var newPositions = new List<Path>(positions)
+        {
+            new Path(pos, nearPos, countValue)
+        };
+
+        FindPair(newBoard, newPositions);
+
+        return true;
+    }
+
+
+    private static void DampPositions(IReadOnlyCollection<Path> path)
+    {
+        Debug.Log("-----------DUMP--------");
+        if (path == null)
+        {
+            Debug.Log($"count = 0");
+            return;
+        }
+
+        foreach (var p in path) Debug.Log(p);
+        Debug.Log($"count = {path.Count}");
     }
 }
