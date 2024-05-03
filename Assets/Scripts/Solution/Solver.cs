@@ -69,15 +69,16 @@ public class Solver
 
 
         // Selection criteria:
+        
         // a) overall path steps to move
-        // if (positions.Count <= _pathCount) return;
+        if (positions.Count <= _pathCount) return;
+        
         // b) overall items to move
-
         var itemCounts = positions.Sum(p => p.count);
         if (itemCounts <= _itemsTransferCount) return;
 
 
-        // _pathCount = positions.Count;
+        _pathCount = positions.Count;
         _bestPath = positions;
         _itemsTransferCount = itemCounts;
     }

@@ -1,5 +1,5 @@
+using System;
 using System.Collections.Generic;
-using UnityEngine;
 
 public class InfoManager : MonoSingleton<InfoManager>
 {
@@ -7,14 +7,9 @@ public class InfoManager : MonoSingleton<InfoManager>
 
     public GridInfoAssigner GetCurrentInfo()
     {
-        var completedSceneCount = GameManager.instance.GetTotalStagePlayed() - 1;
-
-        completedSceneCount = (completedSceneCount > currentGridInfo.Count - 1) ? currentGridInfo.Count - 1 : completedSceneCount;
-
-        if (completedSceneCount < 0) completedSceneCount = 0;
-
-        return currentGridInfo[completedSceneCount];
-
+        var completedSceneCount = GameManager.instance.GetTotalStagePlayed();
+        completedSceneCount %= currentGridInfo.Count + 1;
+        completedSceneCount = Math.Max(completedSceneCount, 1);
+        return currentGridInfo[completedSceneCount - 1];
     }
-
 }

@@ -2,6 +2,7 @@ using UnityEngine;
 using DG.Tweening;
 using System.Collections.Generic;
 using System.Collections;
+using System.Threading.Tasks;
 
 public class PickableStack : MonoBehaviour
 {
@@ -10,7 +11,7 @@ public class PickableStack : MonoBehaviour
     [SerializeField] private LayerMask cellLayer;
 
     [Header("Debug")] private Vector3 _startPos;
-    private Vector3 offset => new Vector3(0, .5f, 2);
+    private Vector3 offset => new Vector3(0, 2f, 2);
     private Collider _collider => GetComponent<Collider>();
     [SerializeField] private List<HexagonController> hexagons = new List<HexagonController>();
     private Camera _camera;
@@ -96,14 +97,14 @@ public class PickableStack : MonoBehaviour
 
     private void FollowMousePos()
     {
-        var mousePosition =
-            _camera.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, 10));
+        var mousePosition = _camera.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, 10));
 
         // Update the position of the selected object to the mouse position
-        _tr.position = new Vector3(mousePosition.x + offset.x, _tr.position.y, mousePosition.z + offset.z);
+
+        _tr.position = new Vector3(mousePosition.x + offset.x, _startPos.y + offset.y, mousePosition.z + offset.z);
     }
 
-    private void GoToCell(CellController targetCell)
+    private async void GoToCell(CellController targetCell)
     {
         targetCell.UpdateHexagonsList(hexagons);
 
@@ -113,6 +114,7 @@ public class PickableStack : MonoBehaviour
 
             hex.transform.DOLocalMove(new Vector3(0, i * GridManager.instance.VERTICAL_PLACEMENT_OFFSET, 0), 0.3f);
         }
+        await Task.Delay(300);
 
         InputManager.instance.SetBlockPicking(shouldBlock: false);
         InputManager.instance.TriggerStackPlacedOnGridEvent(this);

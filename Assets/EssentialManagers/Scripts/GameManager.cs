@@ -3,9 +3,9 @@ using UnityEngine.SceneManagement;
 
 public class GameManager : MonoSingleton<GameManager>
 {
-    public static readonly string lastPlayedStageKey = "n_lastPlayedStage";
-    public static readonly string randomizeStagesKey = "n_randomizeStages";
-    public static readonly string cumulativeStagePlayedKey = "n_cumulativeStages";
+    private static readonly string lastPlayedStageKey = "n_lastPlayedStage";
+    private static readonly string randomizeStagesKey = "n_randomizeStages";
+    private static readonly string cumulativeStagePlayedKey = "n_cumulativeStages";
 
     [HideInInspector] public bool isLevelActive = false;
     [HideInInspector] public bool isLevelSuccessful = false;
@@ -34,7 +34,7 @@ public class GameManager : MonoSingleton<GameManager>
     {
         base.Awake();
 
-        if (!PlayerPrefs.HasKey(cumulativeStagePlayedKey)) PlayerPrefs.SetInt(cumulativeStagePlayedKey, 2);
+        if (!PlayerPrefs.HasKey(cumulativeStagePlayedKey)) PlayerPrefs.SetInt(cumulativeStagePlayedKey, 1);
 
         Application.targetFrameRate = 999;
         QualitySettings.vSyncCount = 0;
